@@ -1129,9 +1129,7 @@
   loadUser();
 
   // ── Mailchimp Integration ──
-  const MC_API_KEY = '5d60e5a2ee118dbe110e5f6f9ee4a5c2-us8';
   const MC_AUDIENCE_ID = '63ad3deb0e';
-  const MC_DC = 'us8';
 
   async function fetchMailchimp(endpoint) {
     const res = await fetch(`/.netlify/functions/mailchimp?endpoint=${encodeURIComponent(endpoint)}`);
