@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus — AI Martech Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: #080B14;
+    --surface: #0E1220;
+    --surface2: #141829;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #F0F2FF;
+    --muted: #7A82A0;
+    --accent: #4F6EF7;
+    --accent2: #00D4AA;
+    --accent3: #FF6B6B;
+    --accent4: #FFB347;
+    --glow: rgba(79,110,247,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+  /* Layout */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    z-index: 10;
+  }
+  .logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4F6EF7, #00D4AA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+  }
+  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+  .nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+  .nav-section-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 10px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 400;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .nav-item.active { background: rgba(79,110,247,0.15); color: var(--accent); }
+  .nav-icon { width: 16px; height: 16px; opacity: 0.7; }
+  .nav-item.active .nav-icon { opacity: 1; }
+
+  .sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .user-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--surface2);
+    cursor: pointer;
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; font-family: 'Syne', sans-serif;
+  }
+  .user-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .user-plan { font-size: 10px; color: var(--muted); }
+
+  /* Main */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    height: 56px; min-height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+  }
+  .page-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 600; flex: 1; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border2);
+    font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-ghost { background: transparent; color: var(--muted); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #6B85F8; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card-sm { padding: 14px 16px; }
+
+  /* Grid */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+
+  /* Metric card */
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .metric-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; }
+  .metric-change { font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .up { color: var(--accent2); }
+  .down { color: var(--accent3); }
+
+  /* Status dot */
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot-green { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .dot-blue { background: var(--accent); }
+  .dot-red { background: var(--accent3); }
+  .dot-amber { background: var(--accent4); }
+
+  /* Badge */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 500; }
+  .badge-blue { background: rgba(79,110,247,0.15); color: #7A9BFF; }
+  .badge-green { background: rgba(0,212,170,0.12); color: var(--accent2); }
+  .badge-red { background: rgba(255,107,107,0.12); color: var(--accent3); }
+  .badge-amber { background: rgba(255,179,71,0.12); color: var(--accent4); }
+
+  /* Progress bar */
+  .progress-wrap { background: rgba(255,255,255,0.06); border-radius: 4px; height: 5px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 1s ease; }
+
+  /* Table */
+  .table { width: 100%; border-collapse: collapse; }
+  .table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* AI chat box */
+  .ai-panel { display: flex; flex-direction: column; height: 100%; }
+  .ai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .ai-msg { max-width: 85%; }
+  .ai-msg.user { align-self: flex-end; }
+  .ai-msg.bot { align-self: flex-start; }
+  .ai-bubble {
+    padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6;
+  }
+  .ai-msg.user .ai-bubble { background: var(--accent); color: white; border-bottom-right-radius: 3px; }
+  .ai-msg.bot .ai-bubble { background: var(--surface2); color: var(--text); border-bottom-left-radius: 3px; border: 1px solid var(--border); }
+  .ai-sender { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .ai-input-wrap { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .ai-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 8px 12px; outline: none; resize: none;
+  }
+  .ai-input:focus { border-color: var(--accent); }
+  .ai-send {
+    background: var(--accent); border: none; color: white; width: 36px; height: 36px;
+    border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; transition: background 0.15s;
+  }
+  .ai-send:hover { background: #6B85F8; }
+
+  /* Connector card */
+  .connector-card {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; display: flex; flex-direction: column; gap: 10px;
+    transition: border-color 0.15s;
+  }
+  .connector-card:hover { border-color: var(--border2); }
+  .connector-logo { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .connector-name { font-size: 13px; font-weight: 500; }
+  .connector-cat { font-size: 11px; color: var(--muted); }
+
+  /* Chart bars */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { border-radius: 4px 4px 0 0; width: 100%; transition: height 0.8s ease; }
+  .bar-label { font-size: 10px; color: var(--muted); }
+
+  /* Segment pills */
+  .segment-pill {
+    padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border2);
+    font-size: 12px; cursor: pointer; transition: all 0.15s; color: var(--muted);
+    background: transparent;
+  }
+  .segment-pill.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* Glow card */
+  .glow-card {
+    background: linear-gradient(135deg, rgba(79,110,247,0.08), rgba(0,212,170,0.05));
+    border: 1px solid rgba(79,110,247,0.2);
+    border-radius: 12px; padding: 16px;
+  }
+
+  /* Workflow node */
+  .wf-node {
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .wf-arrow { color: var(--muted); font-size: 16px; text-align: center; padding: 4px 0; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .tab { padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* Loading spinner */
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Typing indicator */
+  .typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+  .typing span { width: 6px; height: 6px; background: var(--muted); border-radius: 50%; animation: bounce 1s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  /* ROI tag */
+  .roi-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.2); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--accent2); }
+
+  /* Hide/show pages */
+  .page { display: none; }
+  .page.active { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Pulse animation */
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .pulse { animation: pulse 2s infinite; }
+
+  /* Mini sparkline */
+  .sparkline { display: inline-flex; align-items: flex-end; gap: 2px; height: 20px; }
+  .spark { width: 4px; border-radius: 2px 2px 0 0; background: var(--accent2); opacity: 0.6; }
+  .spark:last-child { opacity: 1; }
+
+  .section-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .mb-4 { margin-bottom: 4px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-12 { margin-bottom: 12px; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-muted { color: var(--muted); }
+  .text-sm { font-size: 12px; }
+  .text-xs { font-size: 11px; }
+  .w-full { width: 100%; }
+  .flex-1 { flex: 1; }
+
+  select.filter-select {
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: 7px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px;
+    padding: 6px 10px; outline: none; cursor: pointer;
+  }
+
+  .insight-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .insight-row:last-child { border-bottom: none; }
+  .insight-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-text">Nexus</div>
+      <div class="logo-sub">AI Martech Platform</div>
+    </div>
+    <div class="nav">
+      <div class="nav-section-label">Platform</div>
+      <div class="nav-item active" onclick="showPage('dashboard', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('insights', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zm0 2a.75.75 0 00-.75.75v3c0 .199.079.39.22.53l2 2a.75.75 0 101.06-1.06L8.75 8.19V5.25A.75.75 0 008 4.5z"/></svg>
+        AI Insights
+      </div>
+      <div class="nav-item" onclick="showPage('segments', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a3 3 0 100 6 3 3 0 000-6zM3.5 9.5A3.5 3.5 0 000 13v.5A.5.5 0 00.5 14h15a.5.5 0 00.5-.5V13a3.5 3.5 0 00-3.5-3.5h-9z"/></svg>
+        Segments
+      </div>
+      <div class="nav-item" onclick="showPage('campaigns', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M13.6 1.4L1.8 6.6a.5.5 0 000 .9l4.1 1.7 1.7 4.1a.5.5 0 00.9 0l5.2-11.8a.5.5 0 00-.1-.1z"/></svg>
+        Campaigns
+      </div>
+      <div class="nav-item" onclick="showPage('attribution', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 11l4-4 3 3 4-5 3 2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Attribution
+      </div>
+      <div class="nav-item" onclick="showPage('ai', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a.5.5 0 01.5.5v1a.5.5 0 01-1 0V2a.5.5 0 01.5-.5zm4.5 6a.5.5 0 010 1h-1a.5.5 0 010-1h1zM2.5 8a.5.5 0 01.5-.5h1a.5.5 0 010 1H3a.5.5 0 01-.5-.5zm5.5 4a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zm5.85-9.85a.5.5 0 010 .7l-.7.7a.5.5 0 01-.71-.7l.7-.71a.5.5 0 01.71 0zm-11 .7a.5.5 0 01-.7-.7l.7-.71a.5.5 0 01.71.71l-.71.7zm9.9 9.9a.5.5 0 01-.7 0l-.71-.7a.5.5 0 11.7-.71l.71.7a.5.5 0 010 .71zm-9.9 0a.5.5 0 01-.71-.71l.7-.7a.5.5 0 11.71.7l-.7.71z"/><circle cx="8" cy="8" r="2.5"/></svg>
+        AI Assistant
+      </div>
+      <div class="nav-section-label" style="margin-top:8px;">Data</div>
+      <div class="nav-item" onclick="showPage('connectors', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M6 3.5A1.5 1.5 0 017.5 2h1A1.5 1.5 0 0110 3.5v1A1.5 1.5 0 018.5 6h-1A1.5 1.5 0 016 4.5v-.25H3A.75.75 0 002.25 5v6A.75.75 0 003 11.75h10A.75.75 0 0013.75 11V5a.75.75 0 00-.75-.75H10V4.5A1.5 1.5 0 018.5 3h-1A1.5 1.5 0 016 4.5v.25H3.25V5A.75.75 0 003 5.75h10a.75.75 0 01.75.75v5a.75.75 0 01-.75.75H3a.75.75 0 01-.75-.75V5A.75.75 0 013 4.25h3V3.5z"/></svg>
+        Connectors
+      </div>
+      <div class="nav-item" onclick="showPage('workflows', this)">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M6 9a3 3 0 100-6 3 3 0 000 6zm8 0a2 2 0 100-4 2 2 0 000 4zM4.59 9.55A4.99 4.99 0 001 14h10a4.99 4.99 0 00-3.59-4.45L6 11l-1.41-1.45zM14 10h-1.77A3.5 3.5 0 0114.5 14H15v-1a3 3 0 00-1-2.24V10z"/></svg>
+        Workflows
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-pill" onclick="toggleUserMenu()" style="cursor:pointer">
+        <div class="user-avatar" id="sidebar-avatar">AK</div>
+        <div style="flex:1">
+          <div class="user-name" id="sidebar-name">Loading...</div>
+          <div class="user-plan" id="sidebar-plan">Nexus</div>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="var(--muted)"><path d="M6 8L1 3h10z"/></svg>
+      </div>
+      <div id="user-menu" style="display:none;margin-top:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;overflow:hidden">
+        <div style="padding:8px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Signed in as <span id="user-email-label" style="color:var(--text)"></span></div>
+        <div onclick="switchAccount()" style="padding:9px 12px;font-size:12px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+          👤 Switch account
+        </div>
+        <div onclick="doLogout()" style="padding:9px 12px;font-size:12px;cursor:pointer;color:#FF6B6B;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border)" onmouseover="this.style.background='rgba(255,107,107,0.08)'" onmouseout="this.style.background='transparent'">
+          ↩ Sign out
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Overview</div>
+      <div class="topbar-actions">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+          <span class="dot dot-green pulse"></span> 8 connectors live
+        </div>
+        <button class="btn btn-ghost btn-sm">Last 30 days ▾</button>
+        <button class="btn btn-primary btn-sm">+ New Campaign</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div id="page-dashboard" class="page active">
+        <!-- Metrics Row -->
+        <div class="grid-4">
+          <div class="metric-card">
+            <div class="metric-label">Total Revenue Attributed</div>
+            <div class="metric-value" style="color:var(--accent2)">$284K</div>
+            <div class="metric-change up">▲ 23% vs last month</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Marketing ROI</div>
+            <div class="metric-value">6.4x</div>
+            <div class="metric-change up">▲ 1.2x improvement</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Active Segments</div>
+            <div class="metric-value">12</div>
+            <div class="metric-change" style="color:var(--muted)">3 AI-generated</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Data Quality Score</div>
+            <div class="metric-value" style="color:var(--accent4)">91%</div>
+            <div class="metric-change up">▲ 14% after cleanup</div>
+          </div>
+        </div>
+
+        <div class="grid-2-1">
+          <!-- Revenue Chart -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-16">
+              <div class="section-title">Revenue Attribution by Channel</div>
+              <select class="filter-select">
+                <option>All channels</option>
+                <option>Email</option>
+                <option>Paid</option>
+                <option>Social</option>
+              </select>
+            </div>
+            <div class="bar-chart" style="height:120px">
+              <div class="bar-wrap">
+                <div class="bar" style="height:55%;background:var(--accent);opacity:0.7"></div>
+                <div class="bar-label">Email</div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar" style="height:80%;background:var(--accent)"></div>
+                <div class="bar-label">Paid</div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar" style="height:40%;background:var(--accent);opacity:0.5"></div>
+                <div class="bar-label">Social</div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar" style="height:65%;background:var(--accent2);opacity:0.8"></div>
+                <div class="bar-label">SEO</div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar" style="height:30%;background:var(--accent4);opacity:0.7"></div>
+                <div class="bar-label">Referral</div>
+              </div>
+              <div class="bar-wrap">
+                <div class="bar" style="height:50%;background:var(--accent2)"></div>
+                <div class="bar-label">Direct</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:16px;margin-top:14px">
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--accent);display:inline-block"></span>Paid channels</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--accent2);display:inline-block"></span>Organic</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><span style="width:8px;height:8px;border-radius:2px;background:var(--accent4);display:inline-block"></span>Other</div>
+            </div>
+          </div>
+
+          <!-- AI Insight Panel -->
+          <div class="glow-card flex flex-col gap-12">
+            <div class="flex items-center gap-8">
+              <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px">✦</div>
+              <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600">Nexus AI</div>
+              <span class="badge badge-green">3 new insights</span>
+            </div>
+            <div class="insight-row">
+              <div class="insight-icon" style="background:rgba(79,110,247,0.15)">📈</div>
+              <div>
+                <div style="font-size:12px;font-weight:500;margin-bottom:2px">Paid ROI dropping</div>
+                <div class="text-xs text-muted">Google Ads CPA up 34% this week. Switch budget to Meta for same audience.</div>
+              </div>
+            </div>
+            <div class="insight-row">
+              <div class="insight-icon" style="background:rgba(0,212,170,0.1)">🎯</div>
+              <div>
+                <div style="font-size:12px;font-weight:500;margin-bottom:2px">Segment opportunity</div>
+                <div class="text-xs text-muted">482 customers match "High-LTV + 45d inactive" — ready to re-engage.</div>
+              </div>
+            </div>
+            <div class="insight-row">
+              <div class="insight-icon" style="background:rgba(255,179,71,0.1)">⚠️</div>
+              <div>
+                <div style="font-size:12px;font-weight:500;margin-bottom:2px">Data quality alert</div>
+                <div class="text-xs text-muted">1,204 email records missing from Shopify sync. Auto-fix available.</div>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="font-size:12px;padding:8px 12px" onclick="showPage('ai', document.querySelector('[onclick*=ai]'))">Ask AI anything ↗</button>
+          </div>
+        </div>
+
+        <!-- Active Campaigns -->
+        <div class="card">
+          <div class="flex items-center justify-between mb-16">
+            <div class="section-title">Active Campaigns</div>
+            <button class="btn btn-ghost btn-sm">View all</button>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Channel</th>
+                <th>Reach</th>
+                <th>Conversion</th>
+                <th>Revenue</th>
+                <th>ROI</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span style="font-weight:500">Win-back Series</span><br><span class="text-xs text-muted">AI-personalized · 5 steps</span></td>
+                <td><span class="badge badge-blue">Email</span></td>
+                <td>3,421</td>
+                <td><span style="color:var(--accent2)">12.4%</span></td>
+                <td>$48,200</td>
+                <td><span class="roi-tag">8.2x</span></td>
+                <td><span class="dot dot-green"></span> Live</td>
+              </tr>
+              <tr>
+                <td><span style="font-weight:500">New Feature Launch</span><br><span class="text-xs text-muted">Multi-channel · 3 segments</span></td>
+                <td><span class="badge badge-amber">Multi</span></td>
+                <td>12,800</td>
+                <td><span style="color:var(--accent2)">6.8%</span></td>
+                <td>$92,500</td>
+                <td><span class="roi-tag">5.1x</span></td>
+                <td><span class="dot dot-green"></span> Live</td>
+              </tr>
+              <tr>
+                <td><span style="font-weight:500">Q2 Retargeting</span><br><span class="text-xs text-muted">Lookalike audience · paid</span></td>
+                <td><span class="badge badge-blue">Paid</span></td>
+                <td>45,000</td>
+                <td><span style="color:var(--accent4)">2.1%</span></td>
+                <td>$31,000</td>
+                <td><span class="roi-tag">2.8x</span></td>
+                <td><span class="dot dot-amber"></span> Optimizing</td>
+              </tr>
+              <tr>
+                <td><span style="font-weight:500">VIP Loyalty Tier</span><br><span class="text-xs text-muted">High-LTV segment · exclusive</span></td>
+                <td><span class="badge badge-green">Email + SMS</span></td>
+                <td>890</td>
+                <td><span style="color:var(--accent2)">28.3%</span></td>
+                <td>$112,000</td>
+                <td><span class="roi-tag">14.1x</span></td>
+                <td><span class="dot dot-green"></span> Live</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AI INSIGHTS PAGE -->
+      <div id="page-insights" class="page">
+        <div class="glow-card mb-8">
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">✦ AI Insights Engine</div>
+          <div class="text-muted text-sm">Nexus analyzes all your connected data sources and surfaces plain-language recommendations — no data team needed.</div>
+        </div>
+        <div class="grid-3">
+          <div class="card" style="border-left:3px solid var(--accent3)">
+            <div class="badge badge-red mb-8">Urgent</div>
+            <div style="font-size:14px;font-weight:500;margin-bottom:6px">Google Ads budget leak detected</div>
+            <div class="text-muted text-sm mb-12">Your top-performing ad set is serving 68% of impressions between 2–5am when your audience isn't active. Estimated wasted spend: <strong style="color:var(--accent3)">$4,200/mo</strong>.</div>
+            <div style="font-size:12px;color:var(--accent2);font-weight:500">Recommended action: Schedule ads for 8am–10pm → save $4.2K/mo</div>
+          </div>
+          <div class="card" style="border-left:3px solid var(--accent2)">
+            <div class="badge badge-green mb-8">Opportunity</div>
+            <div style="font-size:14px;font-weight:500;margin-bottom:6px">482 dormant VIP customers</div>
+            <div class="text-muted text-sm mb-12">Customers who spent $500+ have been inactive for 45+ days. Historical re-engagement rate for this segment: <strong style="color:var(--accent2)">31%</strong>. Estimated recoverable revenue: <strong style="color:var(--accent2)">$86,000</strong>.</div>
+            <div style="font-size:12px;color:var(--accent2);font-weight:500">→ Launch re-engagement workflow in 1 click</div>
+          </div>
+          <div class="card" style="border-left:3px solid var(--accent4)">
+            <div class="badge badge-amber mb-8">Data quality</div>
+            <div style="font-size:14px;font-weight:500;margin-bottom:6px">Email list 23% stale</div>
+            <div class="text-muted text-sm mb-12">1,204 contacts in your CRM have not opened any email in 180+ days and are dragging down deliverability score from 94 → 78. This is suppressing campaign reach.</div>
+            <div style="font-size:12px;color:var(--accent4);font-weight:500">→ Auto-clean list and protect sender score</div>
+          </div>
+          <div class="card" style="border-left:3px solid var(--accent)">
+            <div class="badge badge-blue mb-8">Trend</div>
+            <div style="font-size:14px;font-weight:500;margin-bottom:6px">Mobile conversions up 41%</div>
+            <div class="text-muted text-sm mb-12">Mobile now drives 61% of your traffic but your email templates are not mobile-optimized. Upgrading could add an estimated <strong style="color:var(--accent)">$18K/mo</strong> in conversions.</div>
+            <div style="font-size:12px;color:var(--accent);font-weight:500">→ Switch to mobile-first templates automatically</div>
+          </div>
+          <div class="card" style="border-left:3px solid var(--accent2)">
+            <div class="badge badge-green mb-8">Personalization</div>
+            <div style="font-size:14px;font-weight:500;margin-bottom:6px">3 new micro-segments identified</div>
+            <div class="text-muted text-sm mb-12">AI found behavioral clusters: "Weekend shoppers", "Research-heavy buyers", and "Repeat single-category buyers" — each with distinct messaging needs and predicted CLV.</div>
+            <div style="font-size:12px;color:var(--accent2);font-weight:500">→ Auto-create segments and tailored journeys</div>
+          </div>
+          <div class="card" style="border-left:3px solid var(--accent3)">
+            <div class="badge badge-red mb-8">Churn risk</div>
+            <div style="font-size:14px;font-weight:500;margin-bottom:6px">High churn probability: 234 users</div>
+            <div class="text-muted text-sm mb-12">Predictive model flags 234 customers with 70%+ churn likelihood in next 30 days. Combined ARR at risk: <strong style="color:var(--accent3)">$62,000</strong>. Early intervention has 54% save rate.</div>
+            <div style="font-size:12px;color:var(--accent2);font-weight:500">→ Trigger save campaign immediately</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEGMENTS PAGE -->
+      <div id="page-segments" class="page">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <div class="section-title" style="font-size:16px">Customer Segments</div>
+            <div class="text-muted text-sm">Unified profiles from all data sources. Updated in real-time.</div>
+          </div>
+          <button class="btn btn-primary">+ Create segment</button>
+        </div>
+        <div class="grid-2">
+          <div class="card" style="border-color:rgba(79,110,247,0.3)">
+            <div class="flex items-center justify-between mb-12">
+              <div>
+                <div style="font-size:14px;font-weight:500">High-LTV Champions</div>
+                <div class="text-xs text-muted">LTV > $500 · 3+ purchases · active 30d</div>
+              </div>
+              <span class="badge badge-green">AI-built</span>
+            </div>
+            <div class="flex items-center gap-8 mb-12">
+              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:700">1,204</div>
+              <div>
+                <div class="text-xs text-muted">customers</div>
+                <div class="text-xs up">▲ 48 this week</div>
+              </div>
+            </div>
+            <div class="mb-8">
+              <div class="flex items-center justify-between text-xs text-muted mb-4"><span>Avg LTV</span><span style="color:var(--text)">$842</span></div>
+              <div class="flex items-center justify-between text-xs text-muted mb-4"><span>Email open rate</span><span style="color:var(--accent2)">48.2%</span></div>
+              <div class="flex items-center justify-between text-xs text-muted"><span>Churn risk</span><span style="color:var(--accent2)">Low (4%)</span></div>
+            </div>
+            <button class="btn btn-ghost btn-sm w-full">View & launch campaign</button>
+          </div>
+          <div class="card">
+            <div class="flex items-center justify-between mb-12">
+              <div>
+                <div style="font-size:14px;font-weight:500">At-Risk Dormants</div>
+                <div class="text-xs text-muted">No activity 60d+ · prev. purchasers</div>
+              </div>
+              <span class="badge badge-red">Action needed</span>
+            </div>
+            <div class="flex items-center gap-8 mb-12">
+              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:700">3,891</div>
+              <div>
+                <div class="text-xs text-muted">customers</div>
+                <div class="text-xs down">▼ 12% recoverable</div>
+              </div>
+            </div>
+            <div class="mb-8">
+              <div class="flex items-center justify-between text-xs text-muted mb-4"><span>Avg LTV</span><span style="color:var(--text)">$310</span></div>
+              <div class="flex items-center justify-between text-xs text-muted mb-4"><span>Last open rate</span><span style="color:var(--accent4)">9.1%</span></div>
+              <div class="flex items-center justify-between text-xs text-muted"><span>Recoverable revenue</span><span style="color:var(--accent2)">$86K</span></div>
+            </div>
+            <button class="btn btn-primary btn-sm w-full">Launch re-engagement ↗</button>
+          </div>
+          <div class="card">
+            <div class="flex items-center justify-between mb-12">
+              <div>
+                <div style="font-size:14px;font-weight:500">New Signups (30d)</div>
+                <div class="text-xs text-muted">Onboarding · no first purchase yet</div>
+              </div>
+              <span class="badge badge-blue">Nurture</span>
+            </div>
+            <div class="flex items-center gap-8 mb-12">
+              <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:700">921</div>
+              <div>
+                <div class="text-xs text-muted">customers</div>
+                <div class="text-xs up">▲ 210 this week</div>
+              </div>
+            </div>
+            <div class="mb-8">
+              <div class="flex items-center justify-between text-xs text-muted mb-4"><span>Activation rate</span><span style="color:var(--accent4)">34%</span></div>
+              <div class="flex items-center justify-between text-xs text-muted mb-4"><span>Avg sessions</span><span style="color:var(--text)">4.2</span></div>
+              <div class="flex items-center justify-between text-xs text-muted"><span>Predicted LTV</span><span style="color:var(--text)">$180</span></div>
+            </div>
+            <button class="btn btn-ghost btn-sm w-full">View onboarding flow</button>
+          </div>
+          <div class="card" style="border:1px dashed var(--border2);background:transparent;display:flex;align-items:center;justify-content:center;min-height:180px;cursor:pointer">
+            <div style="text-align:center;color:var(--muted)">
+              <div style="font-size:24px;margin-bottom:8px">+</div>
+              <div style="font-size:13px;font-weight:500">Create AI segment</div>
+              <div class="text-xs" style="margin-top:4px">Describe in plain English</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CAMPAIGNS PAGE -->
+      <div id="page-campaigns" class="page">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <div class="section-title" style="font-size:16px">Campaigns</div>
+            <div class="text-muted text-sm">All campaigns, unified attribution, real revenue.</div>
+          </div>
+          <button class="btn btn-primary">+ New Campaign</button>
+        </div>
+        <div class="tabs">
+          <div class="tab active">All</div>
+          <div class="tab">Email</div>
+          <div class="tab">Paid</div>
+          <div class="tab">Social</div>
+          <div class="tab">Automated</div>
+        </div>
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr><th>Name</th><th>Type</th><th>Sent / Reach</th><th>Opens</th><th>Conversions</th><th>Revenue</th><th>ROI</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>VIP Loyalty Program</b></td><td><span class="badge badge-green">Email+SMS</span></td><td>890</td><td>71%</td><td>28.3%</td><td>$112,000</td><td><span class="roi-tag">14.1x</span></td><td><span class="dot dot-green"></span> Live</td></tr>
+              <tr><td><b>Win-back Series</b></td><td><span class="badge badge-blue">Email</span></td><td>3,421</td><td>41%</td><td>12.4%</td><td>$48,200</td><td><span class="roi-tag">8.2x</span></td><td><span class="dot dot-green"></span> Live</td></tr>
+              <tr><td><b>New Feature Launch</b></td><td><span class="badge badge-amber">Multi</span></td><td>12,800</td><td>29%</td><td>6.8%</td><td>$92,500</td><td><span class="roi-tag">5.1x</span></td><td><span class="dot dot-green"></span> Live</td></tr>
+              <tr><td><b>Q2 Google Retargeting</b></td><td><span class="badge badge-blue">Paid</span></td><td>45,000</td><td>—</td><td>2.1%</td><td>$31,000</td><td><span class="roi-tag">2.8x</span></td><td><span class="dot dot-amber"></span> Optimizing</td></tr>
+              <tr><td><b>Onboarding Nurture</b></td><td><span class="badge badge-blue">Email</span></td><td>921</td><td>58%</td><td>34%</td><td>$14,200</td><td><span class="roi-tag">6.0x</span></td><td><span class="dot dot-green"></span> Live</td></tr>
+              <tr><td><b>Q1 Social Awareness</b></td><td><span class="badge badge-blue">Social</span></td><td>98,000</td><td>—</td><td>0.9%</td><td>$8,100</td><td><span class="roi-tag">1.4x</span></td><td><span class="dot dot-red"></span> Paused</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="glow-card">
+          <div style="font-size:13px;font-weight:500;margin-bottom:8px">✦ AI recommendation</div>
+          <div class="text-muted text-sm">Your Q1 Social campaign has a 1.4x ROI — below your 3x minimum threshold. Nexus recommends reallocating that $5,800 budget to VIP Loyalty or Win-back campaigns to get an estimated <strong style="color:var(--accent2)">$14,500</strong> in additional revenue.</div>
+        </div>
+      </div>
+
+      <!-- ATTRIBUTION PAGE -->
+      <div id="page-attribution" class="page">
+        <div class="glow-card mb-8">
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px">Revenue Attribution — Data-Driven Model</div>
+          <div class="text-muted text-sm">Unlike last-click models, Nexus uses AI to attribute revenue across every touchpoint in the customer journey. This is the truth of what's actually driving revenue.</div>
+        </div>
+        <div class="grid-4">
+          <div class="metric-card"><div class="metric-label">Email Attribution</div><div class="metric-value">$112K</div><div class="metric-change up">▲ 39% share</div></div>
+          <div class="metric-card"><div class="metric-label">Paid Attribution</div><div class="metric-value">$94K</div><div class="metric-change" style="color:var(--muted)">33% share</div></div>
+          <div class="metric-card"><div class="metric-label">Organic/SEO</div><div class="metric-value">$58K</div><div class="metric-change up">▲ 20% share</div></div>
+          <div class="metric-card"><div class="metric-label">Direct/Referral</div><div class="metric-value">$22K</div><div class="metric-change" style="color:var(--muted)">8% share</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title mb-12">Top Revenue-Driving Channels</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div>
+                <div class="flex items-center justify-between mb-4"><span style="font-size:13px">Email — VIP Loyalty</span><span style="font-size:13px;color:var(--accent2)">$112K</span></div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:90%;background:var(--accent2)"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-4"><span style="font-size:13px">Google Ads</span><span style="font-size:13px">$62K</span></div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:50%;background:var(--accent)"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-4"><span style="font-size:13px">Email — Win-back</span><span style="font-size:13px">$48K</span></div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:38%;background:var(--accent)"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-4"><span style="font-size:13px">SEO / Organic</span><span style="font-size:13px">$41K</span></div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:33%;background:var(--accent2);opacity:0.7"></div></div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-4"><span style="font-size:13px">Meta Ads</span><span style="font-size:13px">$22K</span></div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:18%;background:var(--accent4)"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title mb-12">What last-click missed</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px">Before Nexus, last-click attribution was giving 100% of revenue credit to Google Ads — hiding that email and SEO were doing the heavy lifting earlier in the journey.</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="flex items-center justify-between" style="font-size:12px;padding:8px;background:var(--surface2);border-radius:8px">
+                <span>Email (old credit)</span>
+                <span style="color:var(--accent3)">$12K undervalued</span>
+              </div>
+              <div class="flex items-center justify-between" style="font-size:12px;padding:8px;background:var(--surface2);border-radius:8px">
+                <span>SEO (old credit)</span>
+                <span style="color:var(--accent3)">$28K undervalued</span>
+              </div>
+              <div class="flex items-center justify-between" style="font-size:12px;padding:8px;background:var(--surface2);border-radius:8px">
+                <span>Paid (old credit)</span>
+                <span style="color:var(--accent4)">$40K overvalued</span>
+              </div>
+            </div>
+            <div class="roi-tag" style="margin-top:14px;font-size:11px">Nexus corrected $80K in misattributed revenue</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI ASSISTANT PAGE -->
+      <div id="page-ai" class="page" style="height:calc(100vh - 56px - 48px)">
+        <div style="display:flex;height:100%;gap:16px">
+          <div class="card flex-1" style="padding:0;display:flex;flex-direction:column;overflow:hidden">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+              <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px">✦</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;font-family:'Syne',sans-serif">Nexus AI Assistant</div>
+                <div class="text-xs text-muted">Analyzes your live data. No jargon — just answers.</div>
+              </div>
+            </div>
+            <div class="ai-messages" id="ai-messages">
+              <div class="ai-msg bot">
+                <div class="ai-sender">Nexus AI</div>
+                <div class="ai-bubble">Hi Amara! I've analyzed all 8 of your connected data sources. You have <strong>3 urgent opportunities</strong> worth an estimated <strong style="color:var(--accent2)">$168,000</strong> in recoverable revenue this month. Want me to walk you through them, or do you have a specific question?</div>
+              </div>
+            </div>
+            <div class="ai-input-wrap">
+              <textarea class="ai-input" id="ai-input" rows="1" placeholder="Ask anything about your data, campaigns, ROI..." onkeydown="handleAIKey(event)"></textarea>
+              <button class="ai-send" onclick="sendAIMessage()">➤</button>
+            </div>
+          </div>
+          <div style="width:220px;display:flex;flex-direction:column;gap:10px">
+            <div class="card card-sm">
+              <div class="text-xs text-muted mb-8">Quick questions</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <button class="btn btn-ghost btn-sm" style="text-align:left;font-size:11px;padding:7px 10px" onclick="quickAsk('Which campaign has the best ROI this month?')">Best ROI campaign?</button>
+                <button class="btn btn-ghost btn-sm" style="text-align:left;font-size:11px;padding:7px 10px" onclick="quickAsk('Where am I wasting ad spend?')">Budget waste?</button>
+                <button class="btn btn-ghost btn-sm" style="text-align:left;font-size:11px;padding:7px 10px" onclick="quickAsk('Who are my most at-risk customers?')">Churn risk?</button>
+                <button class="btn btn-ghost btn-sm" style="text-align:left;font-size:11px;padding:7px 10px" onclick="quickAsk('What should I do to hit $300K revenue next month?')">Hit $300K target?</button>
+                <button class="btn btn-ghost btn-sm" style="text-align:left;font-size:11px;padding:7px 10px" onclick="quickAsk('Which channels are underperforming?')">Underperforming channels?</button>
+              </div>
+            </div>
+            <div class="card card-sm">
+              <div class="text-xs text-muted mb-8">Data sources active</div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+                <div class="flex items-center justify-between"><span>Shopify</span><span class="dot dot-green"></span></div>
+                <div class="flex items-center justify-between"><span>HubSpot CRM</span><span class="dot dot-green"></span></div>
+                <div class="flex items-center justify-between"><span>Google Ads</span><span class="dot dot-green"></span></div>
+                <div class="flex items-center justify-between"><span>Mailchimp</span><span class="dot dot-green"></span></div>
+                <div class="flex items-center justify-between"><span>Meta Ads</span><span class="dot dot-green"></span></div>
+                <div class="flex items-center justify-between"><span>Google Analytics</span><span class="dot dot-green"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECTORS PAGE -->
+      <div id="page-connectors" class="page">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <div class="section-title" style="font-size:16px">Data Connectors</div>
+            <div class="text-muted text-sm">All your tools, unified in one data layer. Live sync.</div>
+          </div>
+          <button class="btn btn-primary">+ Add connector</button>
+        </div>
+        <div class="section-title text-xs text-muted mb-8">CONNECTED (8)</div>
+        <div class="grid-3 mb-16">
+          <div class="connector-card">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#96BF48;font-size:16px">🛍</div><div><div class="connector-name">Shopify</div><div class="connector-cat">E-commerce</div></div><span class="dot dot-green" style="margin-left:auto"></span></div>
+            <div class="text-xs text-muted">42,830 orders synced · Last sync: 2m ago</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="connector-card">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#FF7A59;font-size:16px">🔶</div><div><div class="connector-name">HubSpot</div><div class="connector-cat">CRM</div></div><span class="dot dot-green" style="margin-left:auto"></span></div>
+            <div class="text-xs text-muted">18,240 contacts · Last sync: 5m ago</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="connector-card">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#4285F4;font-size:16px">📊</div><div><div class="connector-name">Google Ads</div><div class="connector-cat">Paid media</div></div><span class="dot dot-green" style="margin-left:auto"></span></div>
+            <div class="text-xs text-muted">$28K active spend · Syncing live</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="connector-card" id="mailchimp-connector-card">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#FFE01B;font-size:16px">📧</div><div><div class="connector-name">Mailchimp</div><div class="connector-cat">Email</div></div><span class="dot dot-green" style="margin-left:auto" id="mc-status-dot"></span></div>
+            <div class="text-xs text-muted" id="mc-connector-summary">Loading live data...</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="connector-card">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#1877F2;font-size:16px">📘</div><div><div class="connector-name">Meta Ads</div><div class="connector-cat">Paid social</div></div><span class="dot dot-green" style="margin-left:auto"></span></div>
+            <div class="text-xs text-muted">3 active campaigns · $6.2K spend</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
+          </div>
+          <div class="connector-card">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#E37400;font-size:16px">📈</div><div><div class="connector-name">Google Analytics</div><div class="connector-cat">Analytics</div></div><span class="dot dot-green" style="margin-left:auto"></span></div>
+            <div class="text-xs text-muted">28,400 sessions this month</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
+          </div>
+        </div>
+        <!-- MAILCHIMP LIVE DATA -->
+        <div class="card mb-16" id="mailchimp-live-section">
+          <div class="flex items-center justify-between mb-16">
+            <div class="flex items-center gap-8">
+              <div style="width:32px;height:32px;border-radius:8px;background:#FFE01B;display:flex;align-items:center;justify-content:center;font-size:16px">📧</div>
+              <div>
+                <div style="font-size:14px;font-weight:500">Mailchimp — Live Data</div>
+                <div class="text-xs text-muted" id="mc-last-sync">Syncing...</div>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadMailchimp()">↻ Refresh</button>
+          </div>
+          <div class="grid-4 mb-16">
+            <div class="metric-card"><div class="metric-label">Total Subscribers</div><div class="metric-value" id="mc-total-subscribers" style="font-size:22px">—</div></div>
+            <div class="metric-card"><div class="metric-label">Active Members</div><div class="metric-value" id="mc-active-members" style="font-size:22px;color:var(--accent2)">—</div></div>
+            <div class="metric-card"><div class="metric-label">Avg Open Rate</div><div class="metric-value" id="mc-open-rate" style="font-size:22px">—</div></div>
+            <div class="metric-card"><div class="metric-label">Avg Click Rate</div><div class="metric-value" id="mc-click-rate" style="font-size:22px">—</div></div>
+          </div>
+          <div>
+            <div class="section-title mb-12">Recent Campaigns</div>
+            <div id="mc-campaigns-list">
+              <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Loading campaigns...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title text-xs text-muted mb-8">AVAILABLE TO CONNECT</div>
+        <div class="grid-3">
+          <div class="connector-card" style="opacity:0.6">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#7B68EE;font-size:16px">💬</div><div><div class="connector-name">Klaviyo</div><div class="connector-cat">Email & SMS</div></div></div>
+            <button class="btn btn-ghost btn-sm">Connect</button>
+          </div>
+          <div class="connector-card" style="opacity:0.6">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#00B8D9;font-size:16px">📋</div><div><div class="connector-name">Salesforce</div><div class="connector-cat">CRM</div></div></div>
+            <button class="btn btn-ghost btn-sm">Connect</button>
+          </div>
+          <div class="connector-card" style="opacity:0.6">
+            <div class="flex items-center gap-8"><div class="connector-logo" style="background:#FF4500;font-size:16px">🎯</div><div><div class="connector-name">TikTok Ads</div><div class="connector-cat">Paid social</div></div></div>
+            <button class="btn btn-ghost btn-sm">Connect</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORKFLOWS PAGE -->
+      <div id="page-workflows" class="page">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <div class="section-title" style="font-size:16px">AI Workflows</div>
+            <div class="text-muted text-sm">No-code automation. Describe in English, Nexus builds it.</div>
+          </div>
+          <button class="btn btn-primary">+ New workflow</button>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="flex items-center justify-between mb-12">
+              <div style="font-size:14px;font-weight:500">VIP Re-engagement</div>
+              <span class="badge badge-green">Active · 482 enrolled</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div class="wf-node"><span>🎯</span> Trigger: Customer inactive 45d + LTV &gt; $500</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>✦</span> AI: Generate personalized subject line per user</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>📧</span> Send: Email with top purchased category</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>⏱</span> Wait: 3 days — if no open</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>💬</span> Send: SMS with 10% personal discount</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>📊</span> Log result → update segment + attribution</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="flex items-center justify-between mb-12">
+              <div style="font-size:14px;font-weight:500">Churn Prediction Saver</div>
+              <span class="badge badge-amber">Active · 234 at-risk</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div class="wf-node"><span>🤖</span> AI monitors: Churn probability &gt; 70%</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>✦</span> AI: Identify best save offer per segment</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>📧</span> Send: Personalized save email</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>⏱</span> Wait: 48 hours</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>📞</span> Alert: Sales team if no response + high LTV</div>
+              <div class="wf-arrow">↓</div>
+              <div class="wf-node"><span>📊</span> Track outcome → retrain churn model</div>
+            </div>
+          </div>
+        </div>
+        <div class="glow-card">
+          <div style="font-size:13px;font-weight:500;margin-bottom:8px">✦ Create a workflow in plain English</div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="wf-input" style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 12px;outline:none" placeholder='e.g. "When someone buys for the first time, send a thank you email then ask for a review 7 days later"'>
+            <button class="btn btn-primary" onclick="buildWorkflow()">Build with AI ↗</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+  const pageTitles = {
+    dashboard: 'Overview',
+    insights: 'AI Insights',
+    segments: 'Customer Segments',
+    campaigns: 'Campaigns',
+    attribution: 'Revenue Attribution',
+    ai: 'AI Assistant',
+    connectors: 'Data Connectors',
+    workflows: 'AI Workflows'
+  };
+
+  function showPage(name, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    document.getElementById('page-title').textContent = pageTitles[name] || name;
+    if (el) el.classList.add('active');
+  }
+
+  const aiResponses = {
+    'Which campaign has the best ROI this month?': "Your **VIP Loyalty Program** is your top performer with a **14.1x ROI** — generating $112,000 from just 890 customers. It's outperforming your next best campaign (Win-back Series at 8.2x) by a wide margin. I'd recommend expanding the VIP segment criteria to capture more high-LTV customers.",
+    'Where am I wasting ad spend?': "I found **two major leaks**:\n\n1. **Google Ads**: 68% of impressions are serving 2–5am when your audience isn't active. That's ~$4,200/month wasted. Fix: schedule ads for 8am–10pm.\n\n2. **Q1 Social campaign**: ROI of 1.4x is well below your 3x threshold. The $5,800 budget there would generate ~$14,500 if moved to email campaigns.\n\nTotal recoverable: ~$19,700/month.",
+    'Who are my most at-risk customers?': "Your AI churn model has flagged **234 customers** with 70%+ probability of churning in the next 30 days. Combined ARR at risk: **$62,000**.\n\nTop signals: login frequency dropped 80%, support tickets increased, last purchase was 90+ days ago.\n\nHistorical save rate with early intervention: **54%**. Want me to trigger the churn-saver workflow for these customers now?",
+    'What should I do to hit $300K revenue next month?': "You're at $284K this month. To reach $300K (+$16K), here's my recommended playbook:\n\n1. **Re-engage dormant VIPs** → estimated $26K at 31% recovery rate\n2. **Fix Google Ads scheduling** → save $4.2K in waste, redeploy to email\n3. **Activate 3 new AI segments** → estimated $8K from 'Weekend Shoppers' cluster\n\nConservative projection with these 3 actions: **$318K**. Want me to set these up?",
+    'Which channels are underperforming?': "Based on your data-driven attribution model:\n\n**Underperforming:**\n- Meta Ads: 2.1x ROI (below your 3x floor)\n- Q1 Social: 1.4x ROI (significant drag)\n\n**Overperforming vs. what last-click suggested:**\n- Email is responsible for 39% of revenue but was getting only 4% credit before Nexus\n- SEO drives $58K but was nearly invisible in old reports\n\nRecommendation: Shift $8K from Meta to email automation — projected lift: $24K."
+  };
+
+  async function sendAIMessage() {
+    const input = document.getElementById('ai-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+
+    const messages = document.getElementById('ai-messages');
+
+    // User bubble
+    const userDiv = document.createElement('div');
+    userDiv.className = 'ai-msg user';
+    userDiv.innerHTML = `<div class="ai-bubble">${msg}</div>`;
+    messages.appendChild(userDiv);
+
+    // Typing indicator
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'ai-msg bot';
+    typingDiv.innerHTML = `<div class="ai-sender">Nexus AI</div><div class="ai-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+    messages.appendChild(typingDiv);
+    messages.scrollTop = messages.scrollHeight;
+
+    // Check preset or call API
+    const preset = Object.keys(aiResponses).find(k => msg.toLowerCase().includes(k.toLowerCase().split(' ')[0]));
+    
+    setTimeout(async () => {
+      let reply = '';
+      if (preset) {
+        reply = aiResponses[preset];
+      } else {
+        try {
+          const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 1000,
+              system: `You are Nexus AI, an embedded AI assistant inside a martech analytics platform. The user is Amara Kamau, a marketer using the Nexus platform. You have access to their data: 8 connected tools (Shopify, HubSpot, Google Ads, Mailchimp, Meta Ads, Google Analytics, and 2 more), $284K monthly revenue, 6.4x average marketing ROI, 12 customer segments, 42,830 orders, 18,240 CRM contacts. Key campaigns: VIP Loyalty (14.1x ROI, $112K), Win-back Series (8.2x, $48K), Google Retargeting (2.8x, $31K). 234 at-risk customers, 3 AI insights pending. Give concise, revenue-focused, plain-English answers. No jargon. Be specific and actionable. Keep responses under 120 words.`,
+              messages: [{ role: 'user', content: msg }]
+            })
+          });
+          const data = await res.json();
+          reply = data.content?.[0]?.text || "I'm analyzing your data — please try again in a moment.";
+        } catch {
+          reply = "I'm having trouble connecting right now. Please check your connection and try again.";
+        }
+      }
+
+      typingDiv.querySelector('.ai-bubble').innerHTML = reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+      messages.scrollTop = messages.scrollHeight;
+    }, 1200);
+  }
+
+  function quickAsk(question) {
+    document.getElementById('ai-input').value = question;
+    sendAIMessage();
+  }
+
+  function handleAIKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); }
+  }
+
+  function buildWorkflow() {
+    const input = document.getElementById('wf-input');
+    if (!input.value.trim()) return;
+    alert('✦ Nexus AI is building your workflow...\n\nIn the full version, this would generate a complete multi-step automation based on your description and connect it to your live data sources.');
+    input.value = '';
+  }
+
+  // ── Supabase init ──
+  const SUPABASE_URL = 'https://eqjrrxxnusoyytejgogr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_upPmZnBYu4wlDQkrMLuRQg_fhFkcjwi';
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── User session ──
+  async function loadUser() {
+    // Try localStorage first (fast)
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('nexus_current_user') || 'null'); } catch {}
+
+    if (user) { applyUser(user); return; }
+
+    // Try Supabase session
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      const { data: profile } = await db.from('profiles').select('*').eq('id', session.user.id).single();
+      if (profile) { applyUser(profile); return; }
+    }
+
+    // No session — redirect to login
+    window.location.href = 'login.html';
+  }
+
+  function applyUser(user) {
+    const first = user.first_name || user.first || '';
+    const last = user.last_name || user.last || '';
+    const initials = ((first)[0] + (last)[0]).toUpperCase();
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-name').textContent = `${first} ${last}`;
+    document.getElementById('sidebar-plan').textContent = `${user.plan || 'Starter'} Plan · ${user.company || 'Nexus'}`;
+    document.getElementById('user-email-label').textContent = user.email || '';
+    window._nexusUser = user;
+  }
+
+  function toggleUserMenu() {
+    const m = document.getElementById('user-menu');
+    m.style.display = m.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function doLogout() {
+    await db.auth.signOut();
+    localStorage.removeItem('nexus_current_user');
+    window.location.href = 'login.html';
+  }
+
+  function switchAccount() {
+    localStorage.removeItem('nexus_current_user');
+    window.location.href = 'login.html';
+  }
+
+  // Close user menu on outside click
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('user-menu');
+    const pill = document.querySelector('.user-pill');
+    if (menu && !pill.contains(e.target)) menu.style.display = 'none';
+  });
+
+  loadUser();
+
+  // ── Mailchimp Integration ──
+  const MC_API_KEY = '5d60e5a2ee118dbe110e5f6f9ee4a5c2-us8';
+  const MC_AUDIENCE_ID = '63ad3deb0e';
+  const MC_DC = 'us8';
+
+  async function fetchMailchimp(endpoint) {
+    const res = await fetch(`/.netlify/functions/mailchimp?endpoint=${encodeURIComponent(endpoint)}`);
+    return await res.json();
+  }
+
+  async function loadMailchimp() {
+    try {
+      document.getElementById('mc-last-sync').textContent = 'Syncing with Mailchimp...';
+
+      // Fetch audience stats
+      const audience = await fetchMailchimp(`/lists/${MC_AUDIENCE_ID}`);
+      const stats = audience.stats;
+
+      const totalSubs = (stats.member_count || 0) + (stats.unsubscribe_count || 0);
+      const activeMembers = stats.member_count || 0;
+      const openRate = stats.open_rate ? (stats.open_rate * 100).toFixed(1) + '%' : 'N/A';
+      const clickRate = stats.click_rate ? (stats.click_rate * 100).toFixed(1) + '%' : 'N/A';
+
+      document.getElementById('mc-total-subscribers').textContent = totalSubs.toLocaleString();
+      document.getElementById('mc-active-members').textContent = activeMembers.toLocaleString();
+      document.getElementById('mc-open-rate').textContent = openRate;
+      document.getElementById('mc-click-rate').textContent = clickRate;
+      document.getElementById('mc-connector-summary').textContent = activeMembers.toLocaleString() + ' subscribers synced · Live';
+      document.getElementById('mc-last-sync').textContent = 'Last synced: just now';
+
+      // Fetch campaigns
+      const campaignsData = await fetchMailchimp(`/campaigns?count=5&status=sent&sort_field=send_time&sort_dir=DESC`);
+      const campaigns = campaignsData.campaigns || [];
+
+      const listEl = document.getElementById('mc-campaigns-list');
+      if (campaigns.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No sent campaigns yet. Create and send a campaign in Mailchimp to see it here.</div>';
+      } else {
+        listEl.innerHTML = `<table class="table">
+          <thead><tr><th>Campaign</th><th>Sent</th><th>Recipients</th><th>Open Rate</th><th>Click Rate</th><th>Status</th></tr></thead>
+          <tbody>` +
+          campaigns.map(c => {
+            const rs = c.report_summary || {};
+            const openPct = rs.open_rate ? (rs.open_rate * 100).toFixed(1) + '%' : '—';
+            const clickPct = rs.click_rate ? (rs.click_rate * 100).toFixed(1) + '%' : '—';
+            const sentDate = c.send_time ? new Date(c.send_time).toLocaleDateString() : '—';
+            return `<tr>
+              <td><b>${c.settings.subject_line || c.settings.title || 'Untitled'}</b></td>
+              <td>${sentDate}</td>
+              <td>${(rs.recipient_count || 0).toLocaleString()}</td>
+              <td style="color:var(--accent2)">${openPct}</td>
+              <td>${clickPct}</td>
+              <td><span class="dot dot-green"></span> Sent</td>
+            </tr>`;
+          }).join('') +
+          '</tbody></table>';
+      }
+
+    } catch(err) {
+      console.error('Mailchimp error:', err);
+      document.getElementById('mc-last-sync').textContent = 'Sync error — check API key';
+      document.getElementById('mc-campaigns-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--accent3);font-size:13px">Could not connect to Mailchimp. Make sure the netlify/functions/mailchimp.js file is deployed correctly.</div>';
+      // Still show subscriber count from local data
+      document.getElementById('mc-total-subscribers').textContent = '20';
+      document.getElementById('mc-active-members').textContent = '20';
+      document.getElementById('mc-open-rate').textContent = '—';
+      document.getElementById('mc-click-rate').textContent = '—';
+      document.getElementById('mc-connector-summary').textContent = '20 subscribers imported · API proxy needed for live sync';
+    }
+  }
+
+  // Auto-load Mailchimp when connectors page is visited
+  const origShowPage = showPage;
+  showPage = function(name, el) {
+    origShowPage(name, el);
+    if (name === 'connectors') loadMailchimp();
+  };
+</script>
+</body>
+</html>

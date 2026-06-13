@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus — AI Martech Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060910;
+    --surface: #0C0F1C;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.12);
+    --text: #EEF0FF;
+    --muted: #6B7494;
+    --accent: #4F6EF7;
+    --accent2: #00D4AA;
+    --accent3: #FF6B6B;
+    --accent4: #FFB347;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── Background ── */
+  .bg-layer {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(79,110,247,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,212,170,0.07) 0%, transparent 60%);
+  }
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px;
+    height: 64px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(6,9,16,0.7);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(135deg, #4F6EF7 30%, #00D4AA);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; letter-spacing: -0.5px;
+  }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    font-size: 13px; color: var(--muted); text-decoration: none;
+    transition: color 0.2s; cursor: pointer;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .btn-outline {
+    padding: 8px 18px; border: 1px solid var(--border2); border-radius: 8px;
+    font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.05); }
+  .btn-primary {
+    padding: 8px 20px; border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 600; color: white; cursor: pointer;
+    background: var(--accent); font-family: 'Syne', sans-serif;
+    transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btn-primary:hover { background: #6B85F8; transform: translateY(-1px); }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(79,110,247,0.1); border: 1px solid rgba(79,110,247,0.25);
+    border-radius: 100px; padding: 6px 14px;
+    font-size: 12px; color: #8FA8FF; font-weight: 500;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent2);
+    box-shadow: 0 0 8px var(--accent2);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero-title .line2 {
+    background: linear-gradient(135deg, #4F6EF7, #00D4AA);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--muted); max-width: 540px;
+    line-height: 1.7; margin-bottom: 40px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.6s 0.3s ease both;
+    margin-bottom: 64px;
+  }
+  .btn-hero {
+    padding: 11px 24px; border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: white; cursor: pointer;
+    background: var(--accent); font-family: 'Syne', sans-serif;
+    transition: all 0.2s; text-decoration: none; display: inline-block;
+    letter-spacing: 0.02em;
+  }
+  .btn-hero:hover { background: #6B85F8; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(79,110,247,0.3); }
+  .btn-hero-ghost {
+    padding: 11px 22px; border: 1px solid var(--border2); border-radius: 10px;
+    font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btn-hero-ghost:hover { background: rgba(255,255,255,0.05); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Dashboard preview ── */
+  .dashboard-preview {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 900px;
+    margin: 0 auto;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+  .preview-frame {
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--border2);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    background: #0C0F1C;
+  }
+  .preview-bar {
+    background: #0E1220; padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .preview-url {
+    flex: 1; background: rgba(255,255,255,0.05); border-radius: 6px;
+    padding: 4px 12px; font-size: 11px; color: var(--muted);
+    margin: 0 12px; font-family: monospace;
+  }
+  .preview-body { padding: 0; display: flex; min-height: 360px; }
+  .preview-sidebar {
+    width: 140px; min-width: 140px; background: #0E1220;
+    border-right: 1px solid var(--border); padding: 16px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .preview-logo { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #4F6EF7, #00D4AA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px; padding: 0 4px; }
+  .preview-nav { font-size: 10px; color: var(--muted); padding: 5px 8px; border-radius: 5px; cursor: default; }
+  .preview-nav.active { background: rgba(79,110,247,0.15); color: #7A9BFF; }
+  .preview-main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .preview-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .preview-metric {
+    background: #141829; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .pm-label { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .pm-value { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+  .pm-change { font-size: 8px; color: var(--accent2); margin-top: 2px; }
+  .preview-row { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+  .preview-chart { background: #141829; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .pc-title { font-size: 9px; font-weight: 500; margin-bottom: 8px; }
+  .pc-bars { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
+  .pc-bar { flex: 1; border-radius: 3px 3px 0 0; }
+  .preview-ai { background: linear-gradient(135deg, rgba(79,110,247,0.1), rgba(0,212,170,0.06)); border: 1px solid rgba(79,110,247,0.2); border-radius: 8px; padding: 10px 12px; }
+  .pai-header { font-size: 9px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+  .pai-item { font-size: 8px; color: var(--muted); padding: 5px 0; border-bottom: 1px solid var(--border); line-height: 1.4; }
+  .pai-item:last-child { border-bottom: none; }
+  .pai-title { color: var(--text); font-weight: 500; margin-bottom: 1px; font-size: 8px; }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; padding: 60px 24px;
+  }
+  .stat-item { text-align: center; padding: 0 48px; }
+  .stat-item + .stat-item { border-left: 1px solid var(--border); }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Features ── */
+  .section { position: relative; z-index: 1; padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+  .section-tag { font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 14px; line-height: 1.2; }
+  .section-sub { font-size: 15px; color: var(--muted); max-width: 500px; line-height: 1.7; margin-bottom: 48px; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feature-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .feature-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+  .feature-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 14px;
+  }
+  .feature-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── Gap callouts ── */
+  .gaps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .gap-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; display: flex; gap: 16px;
+  }
+  .gap-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+  .gap-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; font-family: 'Syne', sans-serif; }
+  .gap-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── Comparison ── */
+  .compare-table { width: 100%; border-collapse: collapse; }
+  .compare-table th { font-size: 12px; font-weight: 600; color: var(--muted); padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  .compare-table th.nexus-col { color: var(--accent); }
+  .compare-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table td.nexus-col { background: rgba(79,110,247,0.05); }
+  .check { color: var(--accent2); }
+  .cross { color: #444; }
+
+  /* ── Pricing ── */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .price-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px 24px;
+  }
+  .price-card.featured { border-color: var(--accent); background: rgba(79,110,247,0.06); }
+  .price-badge { font-size: 10px; font-weight: 600; color: var(--accent); background: rgba(79,110,247,0.15); border-radius: 5px; padding: 3px 8px; display: inline-block; margin-bottom: 12px; }
+  .price-name { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .price-amount { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .price-period { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .price-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .price-features li { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .price-features li::before { content: '✓'; color: var(--accent2); font-weight: 700; flex-shrink: 0; }
+
+  /* ── CTA section ── */
+  .cta-section {
+    position: relative; z-index: 1;
+    text-align: center; padding: 100px 24px;
+    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(79,110,247,0.08) 0%, transparent 70%);
+  }
+  .cta-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 16px; line-height: 1.2; }
+  .cta-sub { font-size: 16px; color: var(--muted); margin-bottom: 36px; }
+
+  /* ── Footer ── */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 32px 48px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-logo { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; background: linear-gradient(135deg, #4F6EF7, #00D4AA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .footer-copy { font-size: 12px; color: var(--muted); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 12px; color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--text); }
+
+  /* ── Divider ── */
+  .section-divider { height: 1px; background: var(--border); margin: 0 48px; position: relative; z-index: 1; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .features-grid, .pricing-grid, .gaps-grid { grid-template-columns: 1fr; }
+    .stat-item { padding: 0 24px; }
+    .stat-value { font-size: 26px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+    .preview-metrics { grid-template-columns: repeat(2, 1fr); }
+    .preview-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="bg-grid"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">Nexus</div>
+  <div class="nav-links">
+    <a onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Features</a>
+    <a onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Pricing</a>
+    <a onclick="document.getElementById('compare').scrollIntoView({behavior:'smooth'})">Compare</a>
+  </div>
+  <div class="nav-cta">
+    <a class="btn-outline" href="login.html">Sign in</a>
+    <a class="btn-primary" href="login.html">Get started free →</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    Now in beta — join early access
+  </div>
+
+  <h1 class="hero-title">
+    One platform.<br>
+    <span class="line2">All your data. Real ROI.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Nexus connects every marketing tool you use, cleans your data, and uses AI to turn it all into plain-language revenue insights — no data team required.
+  </p>
+
+  <div class="hero-actions">
+    <a class="btn-hero" href="login.html">Start free trial →</a>
+    <a class="btn-hero-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See how it works</a>
+  </div>
+
+  <!-- Dashboard preview -->
+  <div class="dashboard-preview">
+    <div class="preview-frame">
+      <div class="preview-bar">
+        <div class="preview-dot" style="background:#FF5F57"></div>
+        <div class="preview-dot" style="background:#FFBD2E"></div>
+        <div class="preview-dot" style="background:#28CA41"></div>
+        <div class="preview-url">nexus.app/dashboard</div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-sidebar">
+          <div class="preview-logo">Nexus</div>
+          <div class="preview-nav active">Dashboard</div>
+          <div class="preview-nav">AI Insights</div>
+          <div class="preview-nav">Segments</div>
+          <div class="preview-nav">Campaigns</div>
+          <div class="preview-nav">Attribution</div>
+          <div class="preview-nav">AI Assistant</div>
+          <div class="preview-nav" style="margin-top:8px">Connectors</div>
+          <div class="preview-nav">Workflows</div>
+        </div>
+        <div class="preview-main">
+          <div class="preview-metrics">
+            <div class="preview-metric">
+              <div class="pm-label">Revenue Attributed</div>
+              <div class="pm-value" style="color:#00D4AA">$284K</div>
+              <div class="pm-change">▲ 23% vs last month</div>
+            </div>
+            <div class="preview-metric">
+              <div class="pm-label">Marketing ROI</div>
+              <div class="pm-value">6.4x</div>
+              <div class="pm-change">▲ 1.2x improvement</div>
+            </div>
+            <div class="preview-metric">
+              <div class="pm-label">Active Segments</div>
+              <div class="pm-value">12</div>
+              <div class="pm-change" style="color:#6B7494">3 AI-generated</div>
+            </div>
+            <div class="preview-metric">
+              <div class="pm-label">Data Quality</div>
+              <div class="pm-value" style="color:#FFB347">91%</div>
+              <div class="pm-change">▲ 14% after cleanup</div>
+            </div>
+          </div>
+          <div class="preview-row">
+            <div class="preview-chart">
+              <div class="pc-title">Revenue Attribution by Channel</div>
+              <div class="pc-bars">
+                <div class="pc-bar" style="height:55%;background:#4F6EF7;opacity:0.7"></div>
+                <div class="pc-bar" style="height:80%;background:#4F6EF7"></div>
+                <div class="pc-bar" style="height:40%;background:#4F6EF7;opacity:0.5"></div>
+                <div class="pc-bar" style="height:65%;background:#00D4AA;opacity:0.8"></div>
+                <div class="pc-bar" style="height:30%;background:#FFB347;opacity:0.7"></div>
+                <div class="pc-bar" style="height:50%;background:#00D4AA"></div>
+              </div>
+            </div>
+            <div class="preview-ai">
+              <div class="pai-header">✦ Nexus AI <span style="background:rgba(0,212,170,0.15);color:#00D4AA;padding:1px 5px;border-radius:4px;font-size:7px;margin-left:4px">3 new</span></div>
+              <div class="pai-item"><div class="pai-title">Paid ROI dropping</div>Google Ads CPA up 34% — switch to Meta</div>
+              <div class="pai-item"><div class="pai-title">482 dormant VIPs</div>Recoverable revenue: $86K</div>
+              <div class="pai-item"><div class="pai-title">Data quality alert</div>1,204 records need cleanup</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-value" style="background:linear-gradient(135deg,#4F6EF7,#00D4AA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">75%</div>
+    <div class="stat-label">of businesses have disconnected martech stacks</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">8%</div>
+    <div class="stat-label">actually achieve hyper-personalisation today</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value" style="background:linear-gradient(135deg,#00D4AA,#4F6EF7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">6.4x</div>
+    <div class="stat-label">average ROI for Nexus users in beta</div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- Features -->
+<section class="section" id="features">
+  <div class="section-tag">Platform</div>
+  <h2 class="section-title">Everything your team needs.<br>Nothing your team doesn't.</h2>
+  <p class="section-sub">Built specifically for marketing teams who don't have a data scientist — but still need data-scientist results.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(79,110,247,0.12)">🔗</div>
+      <div class="feature-title">Universal connector</div>
+      <div class="feature-desc">Connect Shopify, HubSpot, Google Ads, Mailchimp, Meta, and 100+ more tools in minutes. One data layer. Everything in sync.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(0,212,170,0.1)">✦</div>
+      <div class="feature-title">AI insights engine</div>
+      <div class="feature-desc">Plain-language recommendations from your data. No dashboards to interpret — Nexus tells you exactly what to do and why.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(255,179,71,0.1)">🎯</div>
+      <div class="feature-title">Revenue attribution</div>
+      <div class="feature-desc">Data-driven attribution across every touchpoint. Know exactly which campaigns drove revenue — not just the last click.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(255,107,107,0.1)">👥</div>
+      <div class="feature-title">AI-built segments</div>
+      <div class="feature-desc">Nexus finds behavioural clusters in your customer data automatically. Describe a segment in English and it builds it for you.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(79,110,247,0.12)">⚡</div>
+      <div class="feature-title">No-code workflows</div>
+      <div class="feature-desc">Build sophisticated AI automations without touching code. Describe what you want in plain English — Nexus does the rest.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(0,212,170,0.1)">🛡</div>
+      <div class="feature-title">Data governance</div>
+      <div class="feature-desc">Built-in data quality scoring, cleaning, compliance controls, and access management. Safe from day one.</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- Gap section -->
+<section class="section">
+  <div class="section-tag">Why Nexus</div>
+  <h2 class="section-title">The gaps no one else fills</h2>
+  <p class="section-sub">Most tools show you what happened. Nexus tells you what to do next — and connects every action directly to revenue.</p>
+
+  <div class="gaps-grid">
+    <div class="gap-card">
+      <div class="gap-icon">📊</div>
+      <div>
+        <div class="gap-title">Fragmented stacks → one data layer</div>
+        <div class="gap-desc">75% of businesses have less than 60% of their martech integrated. Nexus pulls everything into one clean, real-time hub.</div>
+      </div>
+    </div>
+    <div class="gap-card">
+      <div class="gap-icon">🤖</div>
+      <div>
+        <div class="gap-title">AI that fails → AI that actually works</div>
+        <div class="gap-desc">45% of martech AI agents fail to meet expectations because data isn't ready. Nexus fixes the data first, then applies AI.</div>
+      </div>
+    </div>
+    <div class="gap-card">
+      <div class="gap-icon">💰</div>
+      <div>
+        <div class="gap-title">Unprovable ROI → CFO-ready revenue reports</div>
+        <div class="gap-desc">Connects every campaign touchpoint directly to pipeline and closed revenue. Tell your CFO exactly what marketing earned.</div>
+      </div>
+    </div>
+    <div class="gap-card">
+      <div class="gap-icon">🌍</div>
+      <div>
+        <div class="gap-title">Western pricing → Africa-first accessibility</div>
+        <div class="gap-desc">Global tools price for Fortune 500s. Nexus is built for fast-growing mid-market businesses in Africa and emerging markets.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- Compare -->
+<section class="section" id="compare">
+  <div class="section-tag">Comparison</div>
+  <h2 class="section-title">Nexus vs traditional tools</h2>
+  <p class="section-sub">Most martech tools do one thing well. Nexus does everything — unified, intelligent, and built for teams without a data scientist.</p>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th style="width:40%">Capability</th>
+          <th>Point solutions</th>
+          <th>Enterprise suites</th>
+          <th class="nexus-col">Nexus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Unified data layer</td><td><span class="cross">✕</span></td><td>Partial</td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>AI revenue insights</td><td><span class="cross">✕</span></td><td><span class="cross">✕</span></td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>Multi-touch attribution</td><td><span class="cross">✕</span></td><td>Partial</td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>Predictive churn model</td><td><span class="cross">✕</span></td><td><span class="cross">✕</span></td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>AI-built segments</td><td><span class="cross">✕</span></td><td><span class="cross">✕</span></td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>No-code AI workflows</td><td><span class="cross">✕</span></td><td>Requires IT team</td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>No data team required</td><td><span class="cross">✕</span></td><td><span class="cross">✕</span></td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>Africa-first pricing</td><td><span class="cross">✕</span></td><td><span class="cross">✕</span></td><td class="nexus-col"><span class="check">✓</span></td></tr>
+        <tr><td>Setup in minutes</td><td>Partial</td><td><span class="cross">✕</span></td><td class="nexus-col"><span class="check">✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- Pricing -->
+<section class="section" id="pricing">
+  <div class="section-tag">Pricing</div>
+  <h2 class="section-title">Simple, honest pricing</h2>
+  <p class="section-sub">No hidden fees. No data team required. Cancel anytime.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Starter</div>
+      <div class="price-amount">$299</div>
+      <div class="price-period">per month · up to 5 connectors</div>
+      <ul class="price-features">
+        <li>5 data connectors</li>
+        <li>AI insights engine</li>
+        <li>Revenue attribution</li>
+        <li>3 active segments</li>
+        <li>Email support</li>
+      </ul>
+      <a class="btn-outline" href="login.html" style="display:block;text-align:center;border-radius:8px;padding:10px">Get started</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge">Most popular</div>
+      <div class="price-name">Growth</div>
+      <div class="price-amount">$799</div>
+      <div class="price-period">per month · unlimited connectors</div>
+      <ul class="price-features">
+        <li>Unlimited connectors</li>
+        <li>Full AI suite</li>
+        <li>No-code workflows</li>
+        <li>Hyper-personalisation</li>
+        <li>Priority support</li>
+      </ul>
+      <a class="btn-primary" href="login.html" style="display:block;text-align:center;border-radius:8px;padding:10px">Start free trial →</a>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Enterprise</div>
+      <div class="price-amount">Custom</div>
+      <div class="price-period">tailored to your team</div>
+      <ul class="price-features">
+        <li>White-label option</li>
+        <li>Dedicated support</li>
+        <li>Custom AI models</li>
+        <li>SLA guarantee</li>
+        <li>Team onboarding</li>
+      </ul>
+      <a class="btn-outline" href="login.html" style="display:block;text-align:center;border-radius:8px;padding:10px">Contact us</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title">Ready to prove your<br>marketing ROI?</h2>
+  <p class="cta-sub">Join the beta. Free for 15 days. No credit card required.</p>
+  <a class="btn-hero" href="login.html">Create your free account →</a>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Nexus</div>
+  <div class="footer-copy">© 2026 Nexus. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>
