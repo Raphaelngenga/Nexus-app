@@ -835,9 +835,9 @@
         </div>
         <div class="section-title text-xs text-muted mb-8">CONNECTED (8)</div>
         <div class="grid-3 mb-16">
-          <div class="connector-card">
+          <div class="connector-card" id="shopify-connector-card">
             <div class="flex items-center gap-8"><div class="connector-logo" style="background:#96BF48;font-size:16px">🛍</div><div><div class="connector-name">Shopify</div><div class="connector-cat">E-commerce</div></div><span class="dot dot-green" style="margin-left:auto"></span></div>
-            <div class="text-xs text-muted">42,830 orders synced · Last sync: 2m ago</div>
+            <div class="text-xs text-muted" id="shopify-connector-summary">Loading live data...</div>
             <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
           </div>
           <div class="connector-card">
@@ -866,6 +866,32 @@
             <div class="progress-wrap"><div class="progress-bar" style="width:100%;background:var(--accent2)"></div></div>
           </div>
         </div>
+        <!-- SHOPIFY LIVE DATA -->
+        <div class="card mb-16" id="shopify-live-section">
+          <div class="flex items-center justify-between mb-16">
+            <div class="flex items-center gap-8">
+              <div style="width:32px;height:32px;border-radius:8px;background:#96BF48;display:flex;align-items:center;justify-content:center;font-size:16px">🛍</div>
+              <div>
+                <div style="font-size:14px;font-weight:500">Shopify — Live Data</div>
+                <div class="text-xs text-muted" id="shopify-last-sync">Syncing...</div>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadShopify()">↻ Refresh</button>
+          </div>
+          <div class="grid-4 mb-16">
+            <div class="metric-card"><div class="metric-label">Total Orders</div><div class="metric-value" id="shopify-total-orders" style="font-size:22px">—</div></div>
+            <div class="metric-card"><div class="metric-label">Total Revenue</div><div class="metric-value" id="shopify-total-revenue" style="font-size:22px;color:var(--accent2)">—</div></div>
+            <div class="metric-card"><div class="metric-label">Avg Order Value</div><div class="metric-value" id="shopify-aov" style="font-size:22px">—</div></div>
+            <div class="metric-card"><div class="metric-label">Total Products</div><div class="metric-value" id="shopify-products" style="font-size:22px">—</div></div>
+          </div>
+          <div>
+            <div class="section-title mb-12">Recent Orders</div>
+            <div id="shopify-orders-list">
+              <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Loading orders...</div>
+            </div>
+          </div>
+        </div>
+
         <!-- MAILCHIMP LIVE DATA -->
         <div class="card mb-16" id="mailchimp-live-section">
           <div class="flex items-center justify-between mb-16">
@@ -1128,6 +1154,66 @@
 
   loadUser();
 
+  // ── Shopify Integration ──
+  async function loadShopify() {
+    try {
+      document.getElementById('shopify-last-sync').textContent = 'Syncing with Shopify...';
+
+      // Fetch orders and products in parallel
+      const [ordersRes, productsRes] = await Promise.all([
+        fetch('/.netlify/functions/shopify?endpoint=/orders.json?status=any&limit=50'),
+        fetch('/.netlify/functions/shopify?endpoint=/products/count.json')
+      ]);
+
+      const ordersData = await ordersRes.json();
+      const productsData = await productsRes.json();
+
+      const orders = ordersData.orders || [];
+      const productCount = productsData.count || 0;
+
+      // Calculate metrics
+      const totalRevenue = orders.reduce((sum, o) => sum + parseFloat(o.total_price || 0), 0);
+      const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+
+      document.getElementById('shopify-total-orders').textContent = orders.length;
+      document.getElementById('shopify-total-revenue').textContent = '$' + totalRevenue.toFixed(2);
+      document.getElementById('shopify-aov').textContent = '$' + avgOrderValue.toFixed(2);
+      document.getElementById('shopify-products').textContent = productCount;
+      document.getElementById('shopify-connector-summary').textContent = orders.length + ' orders synced · Live';
+      document.getElementById('shopify-last-sync').textContent = 'Last synced: just now';
+
+      // Render orders table
+      const listEl = document.getElementById('shopify-orders-list');
+      if (orders.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No orders yet. Create orders in Shopify to see them here.</div>';
+      } else {
+        listEl.innerHTML = `<table class="table">
+          <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>` +
+          orders.slice(0, 10).map(o => {
+            const customer = o.customer ? `${o.customer.first_name || ''} ${o.customer.last_name || ''}`.trim() : 'Guest';
+            const itemCount = o.line_items ? o.line_items.length : 0;
+            const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : '—';
+            const statusColor = o.financial_status === 'paid' ? 'var(--accent2)' : 'var(--accent4)';
+            return `<tr>
+              <td><b>#${o.order_number || o.name}</b></td>
+              <td>${customer || 'Guest'}</td>
+              <td>${itemCount} item${itemCount !== 1 ? 's' : ''}</td>
+              <td style="color:var(--accent2)"><b>$${parseFloat(o.total_price || 0).toFixed(2)}</b></td>
+              <td><span style="color:${statusColor};font-size:11px;text-transform:capitalize">${o.financial_status || 'pending'}</span></td>
+              <td>${date}</td>
+            </tr>`;
+          }).join('') +
+          '</tbody></table>';
+      }
+
+    } catch(err) {
+      console.error('Shopify error:', err);
+      document.getElementById('shopify-last-sync').textContent = 'Sync error — check connection';
+      document.getElementById('shopify-orders-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--accent3);font-size:13px">Could not connect to Shopify. Please try again.</div>';
+    }
+  }
+
   // ── Mailchimp Integration ──
   const MC_AUDIENCE_ID = '63ad3deb0e';
 
@@ -1197,11 +1283,14 @@
     }
   }
 
-  // Auto-load Mailchimp when connectors page is visited
+  // Auto-load connectors data when connectors page is visited
   const origShowPage = showPage;
   showPage = function(name, el) {
     origShowPage(name, el);
-    if (name === 'connectors') loadMailchimp();
+    if (name === 'connectors') {
+      loadShopify();
+      loadMailchimp();
+    }
   };
 </script>
 </body>
